@@ -1,5 +1,5 @@
 from crewai import Agent, Task, Crew
-from utils.db_simulator import setup_sample_db, run_query
+from utils.db_simulator import setup_sample_db, run_query, get_db_schema
 import os
 import yaml
 from dotenv import load_dotenv, find_dotenv
@@ -7,18 +7,6 @@ import crew_setup as cs
 from crewai import Flow
 from crewai.flow.flow import listen, start
 
-
-# these expect to find a .env file at the directory above the lesson.                                                                                                                     # the format for that file is (without the comment)                                                                                                                                       #API_KEYNAME=AStringThatIsTheLongAPIKeyFromSomeService
-def load_env():
-    _ = load_dotenv(find_dotenv())
-
-def get_openai_api_key():
-    load_env()
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    return openai_api_key
-
-openai_api_key = get_openai_api_key()
-os.environ["OPENAI_MODEL_NAME"] = 'gpt-3.5-turbo'
 
 # Creating Crew
 sql_generator_crew = Crew(
@@ -43,6 +31,8 @@ sql_compliance_crew = Crew(
 
 if __name__ == "__main__":
     setup_sample_db()
+    DB_PATH = "data/sample_db.sqlite"
+    db_schema = get_db_schema(DB_PATH)
 
     class SQLAssistantFlow(Flow):
         @start()
@@ -52,7 +42,7 @@ if __name__ == "__main__":
 
         @listen(collect_prompt_user)
         def gen_raw_sql(self, user_prompt):
-            output = sql_generator_crew.kickoff(inputs={"user_input": user_prompt})      
+            output = sql_generator_crew.kickoff(inputs={"user_input": user_prompt, "db_schema": db_schema})      
             print("Generated SQL:", output)
             # print("SQL Generator Output (dict):", output.__dict__)
             self.state["raw_sql"] = output.pydantic.sqlquery
@@ -74,12 +64,6 @@ if __name__ == "__main__":
             print("Compliance Report:", output3.pydantic.report)
             self.state["compliance_report"] = output3.pydantic.report
             return output3
-
-        # @listen(filter_leads)
-        # def write_email(self, leads):
-        #     scored_leads = [lead.to_dict() for lead in leads]
-        #     emails = email_writing_crew.kickoff_for_each(scored_leads)
-        #     return emails
 
 
     flow = SQLAssistantFlow()

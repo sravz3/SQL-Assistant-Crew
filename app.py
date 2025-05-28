@@ -11,6 +11,17 @@ def load_schema():
 
 st.title("SQL Assistant Crew")
 
+st.markdown("""
+Welcome to the SQL Assistant Crew!  
+This app lets you interact with your database using natural language. Simply type your data question or request (for example, "Show me the top 5 products by total revenue for April 2024"), and our multi-agent system will:
+1. **Generate** a relevant SQL query for your request,
+2. **Review** and optimize the query for correctness and performance,
+3. **Check** the query for compliance and data safety,
+4. **Execute** the query (if compliant) and display the results.
+
+You can also refresh the database schema if your data changes.  
+This tool is perfect for business users, analysts, and anyone who wants to query data without writing SQL by hand!
+""")
 
 st.write("The schema of the database is saved. If you believe the schema is incorrect, you can refresh it by clicking the button below.")
 # Add a refresh button
