@@ -54,6 +54,19 @@ def run_query(query):
     except Exception as e:
         return f"Query failed: {e}"
 
+def get_db_schema(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    schema = ""
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = cursor.fetchall()
+    for table_name, in tables:
+        cursor.execute(f"SELECT sql FROM sqlite_master WHERE type='table' AND name='{table_name}';")
+        create_stmt = cursor.fetchone()[0]
+        schema += create_stmt + ";\n\n"
+    conn.close()
+    return schema
+
 if __name__ == "__main__":
     setup_sample_db()
     print("Sample database created.")

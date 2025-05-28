@@ -1,6 +1,8 @@
 query_task:
-  description: >
-    Generate a SQL query for the user request {user_input}
+  description: |
+    Given the following database schema:
+    {db_schema}
+    Generate a SQL query for the user request: {user_input}
   expected_output: A syntactically correct SQL query using appropriate filters, joins, and groupings.
 
 review_task:

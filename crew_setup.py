@@ -65,3 +65,22 @@ compliance_task = Task(
   context=[review_task],
   output_pydantic=ComplianceReport
 )
+
+# Creating Crew objects for import
+sql_generator_crew = Crew(
+    agents=[query_generator_agent],
+    tasks=[query_task],
+    verbose=True
+)
+
+sql_reviewer_crew = Crew(
+    agents=[query_reviewer_agent],
+    tasks=[review_task],
+    verbose=True
+)
+
+sql_compliance_crew = Crew(
+    agents=[compliance_checker_agent],
+    tasks=[compliance_task],
+    verbose=True
+)
