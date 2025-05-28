@@ -1,0 +1,23 @@
+query_task:
+  description: >
+    Generate a SQL query for the user request {user_input}
+  expected_output: A syntactically correct SQL query using appropriate filters, joins, and groupings.
+
+review_task:
+  description: >
+    Review the following SQL query for correctness, performance, and readability: {sql_query}
+  expected_output: An optimized or verified SQL query
+
+compliance_task:
+  description: >
+    Review the following SQL query for compliance violations, including PII access, unsafe usage, or policy violations.
+    List any issues found, or state "No issues found" if the query is compliant.
+    SQL Query: {reviewed_sqlquery}
+  expected_output: >
+    A markdown-formatted compliance report listing any flagged issues, or stating that the query is compliant. Include a clear verdict at the top (e.g., "Compliant" or "Issues found").
+
+interpret_task:
+  description: >
+    Interpret the output of query {ReviewedSQLQuery}.
+  expected_output: A stakeholder-friendly explanation of trends or findings.
+    
