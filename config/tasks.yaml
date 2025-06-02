@@ -3,11 +3,13 @@ query_task:
     Given the following database schema:
     {db_schema}
     Generate a SQL query for the user request: {user_input}
+    **Only use the tables and columns listed in the schema above. Do not use or invent any other tables or columns. If the request cannot be satisfied with the schema, reply with a comment-only SQL statement explaining why.**
   expected_output: A syntactically correct SQL query using appropriate filters, joins, and groupings.
 
 review_task:
-  description: >
+  description: |
     Review the following SQL query for correctness, performance, and readability: {sql_query}
+    **Ensure that only tables and columns from the provided schema are used.**
   expected_output: An optimized or verified SQL query
 
 compliance_task:

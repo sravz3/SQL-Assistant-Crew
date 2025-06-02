@@ -67,6 +67,19 @@ def get_db_schema(db_path):
     conn.close()
     return schema
 
+def get_structured_schema(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    tables = cursor.fetchall()
+    lines = ["Available tables and columns:"]
+    for table_name, in tables:
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        columns = [row[1] for row in cursor.fetchall()]
+        lines.append(f"- {table_name}: {', '.join(columns)}")
+    conn.close()
+    return '\n'.join(lines)
+
 if __name__ == "__main__":
     setup_sample_db()
     print("Sample database created.")
