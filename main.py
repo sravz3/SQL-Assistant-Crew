@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
         @listen(gen_raw_sql)
         def review_raw_sql(self, generate_sql):
-            output2 = sql_reviewer_crew.kickoff(inputs={"sql_query": self.state["raw_sql"]})
+            output2 = sql_reviewer_crew.kickoff(inputs={"sql_query": self.state["raw_sql"], "db_schema": db_schema})
             print("============ Review Results ============")
             print("Raw SQL:", self.state["raw_sql"])
             print("Reviewed SQL:", output2.pydantic.reviewed_sqlquery)

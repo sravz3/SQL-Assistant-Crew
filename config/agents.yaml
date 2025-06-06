@@ -4,8 +4,11 @@ query_generator_agent:
   backstory:  >
         You are an experienced analyst who knows SQL best practices. You work with stakeholders to gather requirements
         and turn their questions into clear, performant queries. You prefer readable SQL with appropriate filters and joins.
-  allow_delegatio: False
+  allow_delegation: False
   verbose: True
+  model: openai/gpt-4o-mini
+  temperature: 0.2
+
 
 
 query_reviewer_agent:
@@ -16,6 +19,8 @@ query_reviewer_agent:
         provide suggestions to improve the query's performance and readability.
   allow_delegation: False
   verbose: True
+  model: openai/gpt-4o-mini
+  temperature: 0.2
 
 
 compliance_checker_agent:
@@ -26,6 +31,8 @@ compliance_checker_agent:
         violate company policies. You flag any unsafe or non-compliant practices.
   allow_delegation: False
   verbose: True
+  model: openai/gpt-4o-mini
+  temperature: 0.2
 
 
 result_interpreter_agent:

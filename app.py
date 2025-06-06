@@ -1,6 +1,7 @@
 import streamlit as st
 from crew_setup import sql_generator_crew, sql_reviewer_crew, sql_compliance_crew
 from utils.db_simulator import get_structured_schema, run_query
+import sqlparse
 
 DB_PATH = "data/sample_db.sqlite"
 
@@ -47,6 +48,8 @@ if "compliance_report" not in st.session_state:
     st.session_state["compliance_report"] = None
 if "query_result" not in st.session_state:
     st.session_state["query_result"] = None
+if "regenerate_sql" not in st.session_state:
+    st.session_state["regenerate_sql"] = False
 
 user_prompt = st.text_input("Enter your request (e.g., 'Show me the top 5 products by total revenue for April 2024'):")
 
@@ -83,15 +86,17 @@ if st.button("Generate SQL"):
     else:
         st.warning("Please enter a prompt.")
 
+# Only show prompt and generated SQL when awaiting confirmation
 if st.session_state.get("awaiting_confirmation") and st.session_state.get("generated_sql"):
     st.subheader("Generated SQL")
-    st.code(st.session_state["generated_sql"], language="sql")
+    formatted_generated_sql = sqlparse.format(st.session_state["generated_sql"], reindent=True, keyword_case='upper')
+    st.code(formatted_generated_sql, language="sql")
     col1, col2, col3 = st.columns(3)
     with col1:
         if st.button("Confirm and Review"):
             try:
                 # Step 2: Review SQL
-                review_output = sql_reviewer_crew.kickoff(inputs={"sql_query": st.session_state["generated_sql"]})
+                review_output = sql_reviewer_crew.kickoff(inputs={"sql_query": st.session_state["generated_sql"],"db_schema": db_schema})
                 reviewed_sql = review_output.pydantic.reviewed_sqlquery
                 st.session_state["reviewed_sql"] = reviewed_sql
                 # Step 3: Compliance Check
@@ -109,6 +114,7 @@ if st.session_state.get("awaiting_confirmation") and st.session_state.get("gener
                 else:
                     st.session_state["query_result"] = None
                 st.session_state["awaiting_confirmation"] = False
+                st.rerun()
             except Exception as e:
                 st.error(f"An error occurred: {e}")
     with col2:
@@ -125,27 +131,13 @@ if st.session_state.get("awaiting_confirmation") and st.session_state.get("gener
             st.session_state.clear()
             st.rerun()
 
-# Always show the prompt and generated SQL at the top
-if user_prompt:
-    st.subheader("Your Request")
-    st.write(user_prompt)
-
-if st.session_state.get("generated_sql"):
-    st.subheader("Generated SQL")
-    st.code(st.session_state["generated_sql"], language="sql")
-
-# After review, show the rest with dividers
-if st.session_state.get("reviewed_sql"):
-    st.markdown("---")
+# After review, only show reviewed SQL, compliance, and result
+elif st.session_state.get("reviewed_sql"):
     st.subheader("Reviewed SQL")
-    st.code(st.session_state["reviewed_sql"], language="sql")
-
-if st.session_state.get("compliance_report"):
-    st.markdown("---")
+    formatted_sql = sqlparse.format(st.session_state["reviewed_sql"], reindent=True, keyword_case='upper')
+    st.code(formatted_sql, language="sql")
     st.subheader("Compliance Report")
     st.markdown(st.session_state["compliance_report"])
-
-if st.session_state.get("query_result"):
-    st.markdown("---")
-    st.subheader("Query Result")
-    st.code(st.session_state["query_result"]) 
+    if st.session_state.get("query_result"):
+        st.subheader("Query Result")
+        st.code(st.session_state["query_result"]) 

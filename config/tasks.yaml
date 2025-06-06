@@ -16,9 +16,13 @@ query_task:
 
 review_task:
   description: |
-    Review the following SQL query for correctness, performance, and readability: {sql_query}
-    **Only make minimal changes if necessary for correctness, performance, or readability. Do NOT change the logic or intent of the original query. If the query is already correct, return it unchanged.**
+    Review the following SQL query for correctness, performance, and readability: {sql_query} and verify that the query fits the schema: {db_schema}
     Ensure that only tables and columns from the provided schema are used.
+    IMPORTANT:
+    - First, only review the SQL query provided for correctness, performance, or readability
+    - Do NOT invent new tables or columns.
+    - If the Query is already correct, return it unchanged.
+    - If the Query is not correct and cannot be fixed, return a SQL comment (starting with --) explaining why.
   expected_output: An optimized or verified SQL query
 
 compliance_task:
