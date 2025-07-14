@@ -55,7 +55,56 @@ This app uses a **CrewAI-based agent system** to process each user query through
 
 ## 🚀 Getting Started
 
+To get started with the SQL Assistant Crew, follow these steps:
+
+### 1. Install Git (if not already installed)
+
+If you don't have Git installed, you can download it from the official website: [Git for Windows](https://git-scm.com/download/win). Follow the installation instructions.
+
+### 2. Clone the Repository
+
 ```bash
-git clone https://github.com/your-username/sql-assistant-crew.git
-cd sql-assistant-crew
+git clone https://github.com/sravz3/SQL-Assistant-Crew
+cd SQL-Assistant-Crew
+```
+
+### 2. Create and Activate a Virtual Environment (Windows)
+
+It's highly recommended to use a virtual environment to manage project dependencies.
+
+```bash
+python -m venv venv
+.\venv\Scripts\activate
+```
+
+### 3. Install Dependencies
+
+Install the required Python packages using pip:
+
+```bash
+pip install streamlit crewai sqlparse python-dotenv
+```
+
+### 4. Set Up OpenAI API Key
+
+This project uses OpenAI's GPT models. You need to provide your OpenAI API key.
+
+Create a file named `.env` in the root directory of the project (c:/Users/UserName/Desktop/SQL-Assistant-Crew).
+
+Add the following line to the `.env` file:
+
+```
+OPENAI_API_KEY="your_openai_api_key_here"
+```
+
+Replace `"your_openai_api_key_here"` with your actual OpenAI API key. The project uses the `python-dotenv` library to load this environment variable.
+
+### 5. Run the Application
+
+Once the dependencies are installed and your API key is set, you can run the Streamlit application:
+
+```bash
 streamlit run app.py
+```
+
+This will open the SQL Assistant Crew application in your web browser.
