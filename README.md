@@ -55,56 +55,154 @@ This app uses a **CrewAI-based agent system** to process each user query through
 
 ## 🚀 Getting Started
 
-To get started with the SQL Assistant Crew, follow these steps:
+To get started with the SQL Assistant Crew, follow the instructions below based on your experience level and operating system.
 
-### 1. Install Git (if not already installed)
+### For Novice Programmers
 
-If you don't have Git installed, you can download it from the official website: [Git for Windows](https://git-scm.com/download/win). Follow the installation instructions.
+If you're new to development environments, follow these detailed steps.
 
-### 2. Clone the Repository
+#### Windows Installation
 
-```bash
-git clone https://github.com/sravz3/SQL-Assistant-Crew
-cd SQL-Assistant-Crew
-```
+1. **Install Git:**
+    If you don't have Git installed, download it from the official website: [Git for Windows](https://git-scm.com/download/win). Follow the installation instructions.
 
-### 2. Create and Activate a Virtual Environment (Windows)
+2. **Clone the Repository:**
+    Open your command prompt (CMD) or PowerShell and run:
 
-It's highly recommended to use a virtual environment to manage project dependencies.
+    ```bash
+    git clone https://github.com/sravz3/SQL-Assistant-Crew
+    cd SQL-Assistant-Crew
+    ```
 
-```bash
-python -m venv venv
-.\venv\Scripts\activate
-```
+3. **Create and Activate a Virtual Environment:**
+    It's highly recommended to use a virtual environment to manage project dependencies.
 
-### 3. Install Dependencies
+    ```bash
+    python -m venv venv
+    .\venv\Scripts\activate
+    ```
 
-Install the required Python packages using pip:
+4. **Install Dependencies:**
+    Install the required Python packages:
 
-```bash
-pip install streamlit crewai sqlparse python-dotenv
-```
+    ```bash
+    pip install streamlit crewai sqlparse python-dotenv
+    ```
 
-### 4. Set Up OpenAI API Key
+5. **Set Up OpenAI API Key:**
+    This project uses OpenAI's GPT models. You need to provide your OpenAI API key.
+    Create a file named `.env` in the root directory of the project (`c:/Users/YourUserName/Desktop/SQL-Assistant-Crew`).
+    Add the following line to the `.env` file:
 
-This project uses OpenAI's GPT models. You need to provide your OpenAI API key.
+    ```text
+    OPENAI_API_KEY="your_openai_api_key_here"
+    ```
 
-Create a file named `.env` in the root directory of the project (c:/Users/UserName/Desktop/SQL-Assistant-Crew).
+    Replace `"your_openai_api_key_here"` with your actual OpenAI API key. The project uses the `python-dotenv` library to load this environment variable.
 
-Add the following line to the `.env` file:
+6. **Run the Application:**
+    Once dependencies are installed and your API key is set, run the Streamlit application:
 
-```text
-OPENAI_API_KEY="your_openai_api_key_here"
-```
+    ```bash
+    streamlit run app.py
+    ```
 
-Replace `"your_openai_api_key_here"` with your actual OpenAI API key. The project uses the `python-dotenv` library to load this environment variable.
+    This will open the SQL Assistant Crew application in your web browser.
 
-### 5. Run the Application
+#### Linux Installation
 
-Once the dependencies are installed and your API key is set, you can run the Streamlit application:
+1. **Install Git (if not already installed):**
+    Most Linux distributions come with Git pre-installed. If not, you can install it using your package manager:
 
-```bash
-streamlit run app.py
-```
+    ```bash
+    sudo apt update
+    sudo apt install git  # For Debian/Ubuntu
+    # Or for Fedora/RHEL: sudo dnf install git
+    ```
 
-This will open the SQL Assistant Crew application in your web browser.
+2. **Clone the Repository:**
+    Open your terminal and run:
+
+    ```bash
+    git clone https://github.com/sravz3/SQL-Assistant-Crew
+    cd SQL-Assistant-Crew
+    ```
+
+3. **Create and Activate a Virtual Environment:**
+    It's highly recommended to use a virtual environment to manage project dependencies.
+
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
+
+4. **Install Dependencies:**
+    Install the required Python packages:
+
+    ```bash
+    pip install streamlit crewai sqlparse python-dotenv
+    ```
+
+5. **Set Up OpenAI API Key:**
+    This project uses OpenAI's GPT models. You need to provide your OpenAI API key.
+    Create a file named `.env` in the root directory of the project (`/path/to/SQL-Assistant-Crew`).
+    Add the following line to the `.env` file:
+
+    ```text
+    OPENAI_API_KEY="your_openai_api_key_here"
+    ```
+
+    Replace `"your_openai_api_key_here"` with your actual OpenAI API key. The project uses the `python-dotenv` library to load this environment variable.
+
+6. **Run the Application:**
+    Once dependencies are installed and your API key is set, run the Streamlit application:
+
+    ```bash
+    streamlit run app.py
+    ```
+
+    This will open the SQL Assistant Crew application in your web browser.
+
+### For Experienced Programmers
+
+If you're familiar with Python development and virtual environments, here's a concise guide.
+
+#### Windows & Linux Installation
+
+1. **Clone the Repository:**
+
+    ```bash
+    git clone https://github.com/sravz3/SQL-Assistant-Crew
+    cd SQL-Assistant-Crew
+    ```
+
+2. **Set up Virtual Environment and Install Dependencies:**
+
+    ```bash
+    # For Windows:
+    python -m venv venv
+    .\venv\Scripts\activate
+    pip install -r requirements.txt # Assuming a requirements.txt will be created or use the explicit list below
+    
+    # For Linux:
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt # Assuming a requirements.txt will be created or use the explicit list below
+    ```
+
+    *Note: If `requirements.txt` is not available, use `pip install streamlit crewai sqlparse python-dotenv`.*
+
+3. **Configure OpenAI API Key:**
+    Create a `.env` file in the project root and add your OpenAI API key:
+
+    ```text
+    OPENAI_API_KEY="your_openai_api_key_here"
+    ```
+
+4. **Run the Application:**
+
+    ```bash
+    streamlit run app.py
+    ```
+
+    Access the application in your web browser.
