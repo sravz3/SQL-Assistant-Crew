@@ -1,6 +1,6 @@
 # 📘 SQL Assistant Crew
 
-**SQL Assistant Crew** is a Streamlit-powered, CrewAI-orchestrated multi-agent assistant that allows users to interact with a **SQLite** database using natural language. With a modular agent architecture for generation, review, compliance, and execution, users can safely and intuitively run SQL queries—no manual SQL required. Checkout the blog for more details (https://towardsdatascience.com/a-multi-agent-sql-assistant-you-can-trust-with-human-in-loop-checkpoint-llm-cost-control/)
+**SQL Assistant Crew** is a Streamlit-powered, CrewAI-orchestrated multi-agent assistant that allows users to interact with a **SQLite** database using natural language. With a modular agent architecture for generation, review, compliance, and execution, users can safely and intuitively run SQL queries—no manual SQL required. Checkout the blog for more details (<https://towardsdatascience.com/a-multi-agent-sql-assistant-you-can-trust-with-human-in-loop-checkpoint-llm-cost-control/>)
 
 ---
 
@@ -42,14 +42,14 @@ This app uses a **CrewAI-based agent system** to process each user query through
 
 ## 🛠 Tech Stack
 
-| Component         | Technology          |
-|-------------------|---------------------|
-| Frontend UI       | Streamlit           |
-| Database Engine   | SQLite              |
+| Component         | Technology              |
+|-------------------|-------------------------|
+| Frontend UI       | Streamlit               |
+| Database Engine   | SQLite                  |
 | Agent Framework   | [CrewAI](https://github.com/joaomdmoura/crewAI) |
 | LLMs              | OpenAI / GPT-4 (via API) |
-| Orchestration     | Python              |
-| Schema Handling   | SQLite introspection |
+| Orchestration     | Python                   |
+| Schema Handling   | SQLite introspection     |
 
 ---
 
@@ -93,7 +93,7 @@ Create a file named `.env` in the root directory of the project (c:/Users/UserNa
 
 Add the following line to the `.env` file:
 
-```
+```text
 OPENAI_API_KEY="your_openai_api_key_here"
 ```
 
