@@ -1,7 +1,7 @@
 from crewai import Agent, Task, Crew
 from pydantic import BaseModel, Field
-from typing import List
 import yaml
+from langchain_ollama.llms import OllamaLLM
 
 
 # Define file paths for YAML configurations
@@ -33,17 +33,27 @@ class ComplianceReport(BaseModel):
 
 
 
+def get_llm(model_name: str):
+    if "ollama" in model_name:
+        provider, model = model_name.split('/')
+        return OllamaLLM(model=model)
+    else:
+        return None
+
 # Creating Agents
 query_generator_agent = Agent(
-  config=agents_config['query_generator_agent']
+  config=agents_config['query_generator_agent'],
+  llm=get_llm(agents_config['query_generator_agent']['model'])
 )
 
 query_reviewer_agent = Agent(
-  config=agents_config['query_reviewer_agent']
+  config=agents_config['query_reviewer_agent'],
+  llm=get_llm(agents_config['query_reviewer_agent']['model'])
 )
 
 compliance_checker_agent = Agent(
-  config=agents_config['compliance_checker_agent']
+  config=agents_config['compliance_checker_agent'],
+  llm=get_llm(agents_config['compliance_checker_agent']['model'])
 )
 
 # Creating Tasks

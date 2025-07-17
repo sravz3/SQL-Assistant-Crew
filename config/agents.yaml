@@ -6,7 +6,7 @@ query_generator_agent:
         and turn their questions into clear, performant queries. You prefer readable SQL with appropriate filters and joins.
   allow_delegation: False
   verbose: True
-  model: openai/gpt-4o-mini
+  model: ollama/llama3
   temperature: 0.2
 
 

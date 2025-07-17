@@ -1,0 +1,6 @@
+crewai
+python-dotenv
+PyYAML
+ollama
+langchain-ollama
+pandas

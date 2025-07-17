@@ -1,8 +1,5 @@
-from crewai import Agent, Task, Crew
-from utils.db_simulator import setup_sample_db, run_query, get_db_schema
-import os
-import yaml
-from dotenv import load_dotenv, find_dotenv
+from crewai import Crew
+from utils.db_simulator import setup_sample_db, get_db_schema
 import crew_setup as cs
 from crewai import Flow
 from crewai.flow.flow import listen, start
