@@ -35,11 +35,4 @@ compliance_checker_agent:
   temperature: 0.2
 
 
-result_interpreter_agent:
-  role: Business Analyst
-  goal: Translate query results into plain-English insights for non-technical stakeholders
-  backstory: >
-        You communicate insights from data to business teams. Your goal is to simplify findings, highlight trends, and 
-        make recommendations based on query results.
-  allow_delegation: False
-  verbose: True
+

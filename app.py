@@ -3,7 +3,10 @@ from crew_setup import sql_generator_crew, sql_reviewer_crew, sql_compliance_cre
 from utils.db_simulator import get_structured_schema, run_query
 import sqlparse
 from utils.helper import extract_token_counts, calculate_gpt4o_mini_cost
+import os
+from dotenv import load_dotenv, find_dotenv
 
+load_dotenv(find_dotenv(), override=True)
 DB_PATH = "data/sample_db.sqlite"
 
 # Cache the schema, but allow clearing it

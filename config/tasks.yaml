@@ -33,8 +33,4 @@ compliance_task:
   expected_output: >
     A markdown-formatted compliance report listing any flagged issues, or stating that the query is compliant. Include a clear verdict at the top (e.g., "Compliant" or "Issues found").
 
-interpret_task:
-  description: >
-    Interpret the output of query {ReviewedSQLQuery}.
-  expected_output: A stakeholder-friendly explanation of trends or findings.
     
