@@ -1,6 +1,6 @@
 import sqlite3, random, string
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 DB_PATH = "data/sample_db.sqlite"
 
@@ -382,7 +382,7 @@ def setup_ecommerce_db(db_path=DB_PATH, seed=42):
     c.executemany("INSERT INTO categories(category_id,parent_id,name) VALUES (?,?,?);", cat_rows)
 
     def rand_date(days=365):
-        base = datetime.utcnow()
+        base = datetime.now(timezone.utc)
         dt = base - timedelta(days=random.randint(0, days))
         return dt.strftime("%Y-%m-%d %H:%M:%S")
 
