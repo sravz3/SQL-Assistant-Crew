@@ -5,9 +5,17 @@ query_task:
     {db_schema}
     USER REQUEST:
     {user_input}
+    IMPORTANT DATA MODEL RELATIONSHIPS:
+    - order_items contains sales data and can link to product_variants via EITHER variant_id OR sku
+    - product_variants links to products via product_id
+    - products link to brands via brand_id
+    - For sales/revenue queries: order_items → product_variants → products → brands
+    - BOTH approaches are valid: JOIN on variant_id OR JOIN on sku (order_items.sku = product_variants.sku)
+    - order_items.sku matches product_variants.sku (both use VAR- prefix)
+    - products.sku uses SKU- prefix (different from order_items)
     IMPORTANT:
     - First, list which tables and columns from the schema you will use to answer the request.
-    - Then, write the SQL query.
+    - Then, write the SQL query using the correct table relationships above.
     - Only use the tables and columns from the schema above.
     - If the request cannot be satisfied with the schema, return a SQL comment (starting with --) explaining why.
     - Do NOT invent tables or columns.
@@ -18,8 +26,17 @@ review_task:
   description: |
     Review the following SQL query for correctness, performance, and readability: {sql_query} and verify that the query fits the schema: {db_schema}
     Ensure that only tables and columns from the provided schema are used.
+    IMPORTANT DATA MODEL RELATIONSHIPS:
+    - order_items contains sales data and can link to product_variants via EITHER variant_id OR sku
+    - product_variants links to products via product_id
+    - products link to brands via brand_id
+    - For sales/revenue queries: order_items → product_variants → products → brands
+    - BOTH approaches are valid: JOIN on variant_id OR JOIN on sku (order_items.sku = product_variants.sku)
+    - order_items.sku matches product_variants.sku (both use VAR- prefix)
+    - products.sku uses SKU- prefix (different from order_items)
     IMPORTANT:
     - First, only review the SQL query provided for correctness, performance, or readability
+    - Check if the query uses correct table relationships (both variant_id and sku joins are valid for sales data)
     - Do NOT invent new tables or columns.
     - If the Query is already correct, return it unchanged.
     - If the Query is not correct and cannot be fixed, return a SQL comment (starting with --) explaining why.
