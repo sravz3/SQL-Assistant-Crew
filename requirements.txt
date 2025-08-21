@@ -1,0 +1,31 @@
+# SQL Assistant Crew - Requirements
+# Python 3.9+ (3.11 recommended)
+# Tested and verified stable versions
+
+# Core application framework
+streamlit==1.48.1
+
+# Multi-agent system
+crewai==0.130.0
+
+# LLM integration
+openai==1.69.0
+
+# Data processing
+pandas==2.3.1
+sqlparse==0.5.3
+
+# Environment management
+python-dotenv==1.1.1
+
+# Configuration
+pyyaml==6.0.2
+
+# CrewAI core dependencies (automatically installed)
+# - instructor==1.8.2
+# - litellm==1.72.0
+# - pydantic==2.11.7
+# - chromadb==1.0.20
+
+# Note: This minimal set will automatically pull in all required dependencies
+# Total installation includes ~50 packages but only these 7 are directly specified
