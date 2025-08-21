@@ -151,7 +151,9 @@ def setup_ecommerce_db(db_path=DB_PATH, seed=42):
     random.seed(seed)
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
-    c.execute("PRAGMA foreign_keys = ON;")
+    
+    # Disable foreign keys for dropping tables
+    c.execute("PRAGMA foreign_keys = OFF;")
 
     tables = [
         "shipment_items","shipments","payments","order_discounts","order_items","orders",
@@ -165,6 +167,9 @@ def setup_ecommerce_db(db_path=DB_PATH, seed=42):
     ]
     for t in tables:
         c.execute(f"DROP TABLE IF EXISTS {t};")
+    
+    # Re-enable foreign keys for table creation and data insertion
+    c.execute("PRAGMA foreign_keys = ON;")
 
     c.execute("""
     CREATE TABLE brands (
@@ -507,11 +512,11 @@ def setup_ecommerce_db(db_path=DB_PATH, seed=42):
         subtotal = 0.0
         for _ in range(item_cnt):
             variant_id = random.randint(1, max_variant_id)
-            c.execute("SELECT p.name, COALESCE(v.price_override, p.price) FROM product_variants v JOIN products p ON p.product_id=v.product_id WHERE v.variant_id=?;", (variant_id,))
+            c.execute("SELECT p.name, COALESCE(v.price_override, p.price), v.sku FROM product_variants v JOIN products p ON p.product_id=v.product_id WHERE v.variant_id=?;", (variant_id,))
             row = c.fetchone()
-            pname, price = row[0], float(row[1])
+            pname, price, variant_sku = row[0], float(row[1]), row[2]
             qty = random.randint(1, 4)
-            items.append((variant_id, pname, qty, price))
+            items.append((variant_id, pname, qty, price, variant_sku))
             subtotal += qty * price
 
         has_discount = random.random() < 0.25
@@ -532,10 +537,10 @@ def setup_ecommerce_db(db_path=DB_PATH, seed=42):
         order_number = f"ORD-{order_id:06d}"
         order_rows.append((order_id, cid, order_number, status, round(subtotal,2), tax, shipping_fee, round(discount_total,2), total, "USD", bill_addr, ship_addr, created_at))
 
-        for variant_id, pname, qty, price in items:
+        for variant_id, pname, qty, price, variant_sku in items:
             line_discount = 0.0
             line_tax = round((qty * price - line_discount) * tax_rate, 2)
-            order_item_rows.append((order_item_id, order_id, variant_id, pname, rand_sku("ITM-"), qty, price, line_discount, line_tax))
+            order_item_rows.append((order_item_id, order_id, variant_id, pname, variant_sku, qty, price, line_discount, line_tax))
             order_item_id += 1
 
         method = random.choice(["card","paypal","cod","wallet"])
@@ -551,7 +556,7 @@ def setup_ecommerce_db(db_path=DB_PATH, seed=42):
 
         start_item_idx = len(order_item_rows) - item_cnt
         for oi in order_item_rows[start_item_idx:]:
-            shipment_item_rows.append((None, shipment_id, oi[0], oi[5]))
+            shipment_item_rows.append((None, shipment_id, oi[0], oi[6]))
 
         shipment_id += 1
         order_id += 1
