@@ -63,28 +63,11 @@ st.divider()
 # ═══════════════════════════════════════════════════════════════════════════════════
 
 # config_col1, config_col2 = st.columns(2)
-config_col1, config_col2 = st.columns([3, 1])
+config_col1, config_col2 = st.columns([2, 3])
 
-# DATABASE SCHEMA SECTION
-with config_col1:
-    st.markdown("#### Database Schema")
-    st.write("View and manage your database schema. Refresh if your database structure has changed.")
-    
-    # Always get the full schema for display
-    full_schema = load_schema()
-    with st.expander("📋 Show Database Schema", expanded=False):
-        st.code(full_schema, language="sql")
-        newline = '\n'
-        table_count = len([line for line in full_schema.split(newline) if line.startswith('- ')])
-        st.info(f"📈 Schema contains {table_count} tables")
-    
-    if st.button("🔄 Refresh Schema", use_container_width=True):
-        load_schema.clear()  # Clear the cache so next call reloads from DB
-        load_rag_manager.clear()  # Clear RAG cache too
-        st.session_state["schema_refreshed"] = True
 
 # RAG CONFIGURATION SECTION
-with config_col2:
+with config_col1:
     st.markdown("#### RAG Configuration")
     # st.subheader("RAG Configuration")
     # st.write("Choose how to intelligently retrieve relevant schema tables for your queries.")
@@ -118,6 +101,24 @@ with config_col2:
     else:
         st.error("❌ RAG manager not available")
         selected_approach = 'no_rag'
+
+# DATABASE SCHEMA SECTION
+with config_col2:
+    st.markdown("#### Database Schema")
+    st.write("View and manage your database schema. Refresh if your database structure has changed.")
+    
+    # Always get the full schema for display
+    full_schema = load_schema()
+    with st.expander("📋 Show Database Schema", expanded=False):
+        st.code(full_schema, language="sql")
+        newline = '\n'
+        table_count = len([line for line in full_schema.split(newline) if line.startswith('- ')])
+        st.info(f"📈 Schema contains {table_count} tables")
+    
+    if st.button("🔄 Refresh Schema", use_container_width=True):
+        load_schema.clear()  # Clear the cache so next call reloads from DB
+        load_rag_manager.clear()  # Clear RAG cache too
+        st.session_state["schema_refreshed"] = True
 
 # Show schema refresh success message in full width
 if st.session_state.get("schema_refreshed"):
@@ -274,79 +275,14 @@ if st.button("Generate SQL"):
     else:
         st.warning("Please enter a prompt.")
 
-# Only show prompt and generated SQL when awaiting confirmation
-if st.session_state.get("awaiting_confirmation") and st.session_state.get("generated_sql"):
+# Show results based on current state
+if st.session_state.get("reviewed_sql"):
+    # ═══════════════════════════════════════════════════════════════════════════════════
+    # 📝 FINAL RESULTS SECTION (After Review & Compliance Check)
+    # ═══════════════════════════════════════════════════════════════════════════════════
     st.divider()
-    
-    # ═══════════════════════════════════════════════════════════════════════════════════
-    # 📝 RESULTS SECTION
-    # ═══════════════════════════════════════════════════════════════════════════════════
-    
     st.subheader("📝 Query Results")
-    st.write("**🔧 Generated SQL**")
-    formatted_generated_sql = sqlparse.format(st.session_state["generated_sql"], reindent=True, keyword_case='upper')
-    st.code(formatted_generated_sql, language="sql")
-    # Full width cost display
-    st.info(f"💰 Your LLM cost so far: ${st.session_state['llm_cost']:.6f}")
     
-    # Action buttons with proper spacing
-    st.markdown("---")
-    col1, col2, col3 = st.columns([1, 1, 1])
-    
-    with col1:
-        if st.button("✅ Confirm and Review", type="secondary", use_container_width=True):
-            try:
-                # Step 2: Review SQL (always use full schema for comprehensive review)
-                full_schema = load_schema()
-                review_output = sql_reviewer_crew.kickoff(inputs={"sql_query": st.session_state["generated_sql"],"db_schema": full_schema})
-                reviewed_sql = review_output.pydantic.reviewed_sqlquery
-                st.session_state["reviewed_sql"] = reviewed_sql
-                # LLM cost tracking for reviewer
-                token_usage_str = str(review_output.token_usage)
-                prompt_tokens, completion_tokens = extract_token_counts(token_usage_str)
-                cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
-                st.session_state["llm_cost"] += cost
-                # Step 3: Compliance Check
-                compliance_output = sql_compliance_crew.kickoff(inputs={"reviewed_sqlquery": reviewed_sql})
-                compliance_report = compliance_output.pydantic.report
-                # LLM cost tracking for compliance
-                token_usage_str = str(compliance_output.token_usage)
-                prompt_tokens, completion_tokens = extract_token_counts(token_usage_str)
-                cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
-                st.session_state["llm_cost"] += cost
-                # Remove duplicate header if present
-                lines = compliance_report.splitlines()
-                if lines and lines[0].strip().lower().startswith("# compliance report"):
-                    compliance_report = "\n".join(lines[1:]).lstrip()
-                st.session_state["compliance_report"] = compliance_report
-                # Only execute if compliant
-                if "compliant" in compliance_report.lower():
-                    result = run_query(reviewed_sql)
-                    st.session_state["query_result"] = result
-                else:
-                    st.session_state["query_result"] = None
-                st.session_state["awaiting_confirmation"] = False
-                st.rerun()
-            except Exception as e:
-                st.error(f"An error occurred: {e}")
-    
-    with col2:
-        if st.button("🔄 Try Again", use_container_width=True):
-            st.session_state["generated_sql"] = None
-            st.session_state["awaiting_confirmation"] = False
-            st.session_state["reviewed_sql"] = None
-            st.session_state["compliance_report"] = None
-            st.session_state["query_result"] = None
-            st.session_state["regenerate_sql"] = True
-            st.rerun()
-    
-    with col3:
-        if st.button("❌ Abort", use_container_width=True):
-            st.session_state.clear()
-            st.rerun()
-
-# After review, only show reviewed SQL, compliance, and result
-elif st.session_state.get("reviewed_sql"):
     st.write("**🔍 Reviewed SQL**")
     formatted_sql = sqlparse.format(st.session_state["reviewed_sql"], reindent=True, keyword_case='upper')
     st.code(formatted_sql, language="sql")
@@ -357,9 +293,6 @@ elif st.session_state.get("reviewed_sql"):
     if st.session_state.get("query_result"):
         st.write("**📊 Query Result**")
         st.code(st.session_state["query_result"])
-    
-    # Action buttons after results - only Start Over, no Try Again
-    st.markdown("---")
     
     # Show status message first
     compliance_report = st.session_state.get("compliance_report", "").lower()
@@ -402,11 +335,96 @@ elif st.session_state.get("reviewed_sql"):
             # Clear all session state to start fresh
             keys_to_clear = [
                 "generated_sql", "awaiting_confirmation", "reviewed_sql", 
-                "compliance_report", "query_result", "regenerate_sql"
+                "compliance_report", "query_result", "regenerate_sql", "processing_review"
             ]
             for key in keys_to_clear:
                 if key in st.session_state:
                     del st.session_state[key]
             st.success("✅ Ready for a new query!")
+            st.rerun()
+
+# Show processing state
+elif st.session_state.get("processing_review"):
+    st.divider()
+    st.subheader("📝 Query Results")
+    st.info("🔄 Processing review and compliance check...")
+    st.write("Please wait while we review your SQL query and check for compliance issues.")
+    
+    try:
+        # Step 2: Review SQL (always use full schema for comprehensive review)
+        full_schema = load_schema()
+        review_output = sql_reviewer_crew.kickoff(inputs={"sql_query": st.session_state["generated_sql"],"db_schema": full_schema})
+        reviewed_sql = review_output.pydantic.reviewed_sqlquery
+        st.session_state["reviewed_sql"] = reviewed_sql
+        # LLM cost tracking for reviewer
+        token_usage_str = str(review_output.token_usage)
+        prompt_tokens, completion_tokens = extract_token_counts(token_usage_str)
+        cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
+        st.session_state["llm_cost"] += cost
+        # Step 3: Compliance Check
+        compliance_output = sql_compliance_crew.kickoff(inputs={"reviewed_sqlquery": reviewed_sql})
+        compliance_report = compliance_output.pydantic.report
+        # LLM cost tracking for compliance
+        token_usage_str = str(compliance_output.token_usage)
+        prompt_tokens, completion_tokens = extract_token_counts(token_usage_str)
+        cost = calculate_gpt4o_mini_cost(prompt_tokens, completion_tokens)
+        st.session_state["llm_cost"] += cost
+        # Remove duplicate header if present
+        lines = compliance_report.splitlines()
+        if lines and lines[0].strip().lower().startswith("# compliance report"):
+            compliance_report = "\n".join(lines[1:]).lstrip()
+        st.session_state["compliance_report"] = compliance_report
+        # Only execute if compliant
+        if "compliant" in compliance_report.lower():
+            result = run_query(reviewed_sql)
+            st.session_state["query_result"] = result
+        else:
+            st.session_state["query_result"] = None
+        # Clear processing state
+        st.session_state["processing_review"] = False
+        st.rerun()
+    except Exception as e:
+        st.error(f"An error occurred: {e}")
+        st.session_state["processing_review"] = False
+
+# Only show prompt and generated SQL when awaiting confirmation (before review)
+elif st.session_state.get("awaiting_confirmation") and st.session_state.get("generated_sql"):
+    st.divider()
+    
+    # ═══════════════════════════════════════════════════════════════════════════════════
+    # 📝 INITIAL RESULTS SECTION (Before Review)
+    # ═══════════════════════════════════════════════════════════════════════════════════
+    
+    st.subheader("📝 Query Results")
+    st.write("**🔧 Generated SQL**")
+    formatted_generated_sql = sqlparse.format(st.session_state["generated_sql"], reindent=True, keyword_case='upper')
+    st.code(formatted_generated_sql, language="sql")
+    # Full width cost display
+    st.info(f"💰 Your LLM cost so far: ${st.session_state['llm_cost']:.6f}")
+    
+    # Action buttons with proper spacing
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    with col1:
+        if st.button("✅ Confirm and Review", type="secondary", use_container_width=True):
+            # Immediately clear the awaiting_confirmation state and set processing state
+            st.session_state["awaiting_confirmation"] = False
+            st.session_state["processing_review"] = True
+            st.rerun()
+    
+    with col2:
+        if st.button("🔄 Try Again", use_container_width=True):
+            st.session_state["generated_sql"] = None
+            st.session_state["awaiting_confirmation"] = False
+            st.session_state["reviewed_sql"] = None
+            st.session_state["compliance_report"] = None
+            st.session_state["query_result"] = None
+            st.session_state["regenerate_sql"] = True
+            st.rerun()
+    
+    with col3:
+        if st.button("❌ Abort", use_container_width=True):
+            st.session_state.clear()
             st.rerun()
 

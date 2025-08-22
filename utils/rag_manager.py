@@ -411,6 +411,293 @@ class FAISSVectorRAG(BaseRAG):
         }
 
 
+class ChromaVectorRAG(BaseRAG):
+    """Chroma-based vector RAG using sentence transformers with persistent storage."""
+    
+    def __init__(self, db_path: str = DB_PATH):
+        super().__init__(db_path)
+        self.model = None
+        self.chroma_client = None
+        self.collection = None
+        self.table_info = {}
+        self.table_names = []
+        self._initialize()
+    
+    def _initialize(self):
+        """Initialize the Chroma vector store and embeddings."""
+        try:
+            import chromadb
+            from sentence_transformers import SentenceTransformer
+            
+            print("🔄 Initializing Chroma Vector RAG...")
+            
+            # Load embedding model
+            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            print("✅ Loaded embedding model: all-MiniLM-L6-v2")
+            
+            # Initialize Chroma client (persistent storage)
+            self.chroma_client = chromadb.PersistentClient(path="./data/chroma_db")
+            
+            # Get or create collection
+            collection_name = "schema_tables"
+            try:
+                self.collection = self.chroma_client.get_collection(collection_name)
+                print("✅ Loaded existing Chroma collection")
+            except:
+                # Create new collection if it doesn't exist
+                self.collection = self.chroma_client.create_collection(
+                    name=collection_name,
+                    metadata={"description": "Database schema table embeddings"}
+                )
+                print("✅ Created new Chroma collection")
+                
+                # Extract table information and create embeddings
+                self.table_info = self._extract_table_info()
+                self._populate_collection()
+            
+            # Load table names for reference
+            self._load_table_names()
+            
+            print(f"✅ Chroma Vector RAG initialized with {len(self.table_names)} tables")
+            
+        except Exception as e:
+            print(f"❌ Error initializing Chroma Vector RAG: {e}")
+            self.model = None
+            self.chroma_client = None
+            self.collection = None
+    
+    def _extract_table_info(self) -> Dict[str, Dict]:
+        """Extract detailed information about each table."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        table_info = {}
+        
+        try:
+            # Get all table names
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
+            tables = cursor.fetchall()
+            
+            for (table_name,) in tables:
+                info = {
+                    'columns': [],
+                    'foreign_keys': [],
+                    'business_context': self._get_business_context(table_name)
+                }
+                
+                # Get column information
+                cursor.execute(f"PRAGMA table_info({table_name});")
+                columns = cursor.fetchall()
+                for col in columns:
+                    info['columns'].append({
+                        'name': col[1],
+                        'type': col[2],
+                        'primary_key': bool(col[5])
+                    })
+                
+                # Get foreign key information
+                cursor.execute(f"PRAGMA foreign_key_list({table_name});")
+                fks = cursor.fetchall()
+                for fk in fks:
+                    info['foreign_keys'].append({
+                        'column': fk[3],
+                        'references_table': fk[2],
+                        'references_column': fk[4]
+                    })
+                
+                table_info[table_name] = info
+        
+        finally:
+            conn.close()
+        
+        return table_info
+    
+    def _get_business_context(self, table_name: str) -> str:
+        """Get business context description for tables."""
+        contexts = {
+            'products': 'Product catalog with items, prices, categories, and brand information. Core inventory data.',
+            'product_variants': 'Product variations like colors, sizes, SKUs. Links products to specific sellable items.',
+            'customers': 'Customer profiles with personal information, contact details, and account status.',
+            'orders': 'Purchase transactions with totals, dates, status, and customer relationships.',
+            'order_items': 'Individual line items within orders. Contains quantities, prices, and product references.',
+            'payments': 'Payment processing records with methods, amounts, and transaction status.',
+            'inventory': 'Stock levels and warehouse quantities for product variants.',
+            'reviews': 'Customer feedback, ratings, and product reviews.',
+            'suppliers': 'Vendor information for procurement and supply chain management.',
+            'categories': 'Product categorization hierarchy for organizing catalog.',
+            'brands': 'Brand information for products and marketing purposes.',
+            'addresses': 'Customer shipping and billing address information.',
+            'shipments': 'Delivery tracking and shipping status information.',
+            'discounts': 'Promotional codes, coupons, and discount campaigns.',
+            'warehouses': 'Storage facility locations and warehouse management.',
+            'employees': 'Staff information and organizational structure.',
+            'departments': 'Organizational divisions and team structure.',
+            'product_images': 'Product photography and media assets.',
+            'purchase_orders': 'Procurement orders from suppliers.',
+            'purchase_order_items': 'Line items for supplier purchase orders.',
+            'order_discounts': 'Applied discounts and promotions on orders.',
+            'shipment_items': 'Individual items within shipment packages.'
+        }
+        
+        return contexts.get(table_name, f'Database table for {table_name} related operations.')
+    
+    def _populate_collection(self):
+        """Populate Chroma collection with table embeddings."""
+        if not self.collection or not self.table_info:
+            return
+        
+        documents = []
+        metadatas = []
+        ids = []
+        
+        for table_name, info in self.table_info.items():
+            # Create comprehensive description
+            description = self._create_table_description(table_name, info)
+            
+            documents.append(description)
+            metadatas.append({
+                'table_name': table_name,
+                'column_count': len(info['columns']),
+                'has_foreign_keys': len(info['foreign_keys']) > 0,
+                'business_context': info['business_context']
+            })
+            ids.append(f"table_{table_name}")
+        
+        # Add to collection
+        self.collection.add(
+            documents=documents,
+            metadatas=metadatas,
+            ids=ids
+        )
+        
+        print(f"✅ Added {len(documents)} table embeddings to Chroma collection")
+    
+    def _create_table_description(self, table_name: str, info: Dict) -> str:
+        """Create a comprehensive description for embedding."""
+        description = f"Table: {table_name}\n"
+        description += f"Purpose: {info['business_context']}\n"
+        
+        # Add column information
+        description += "Columns: "
+        col_names = [col['name'] for col in info['columns']]
+        description += ", ".join(col_names) + "\n"
+        
+        # Add relationship information
+        if info['foreign_keys']:
+            description += "Relationships: "
+            relationships = []
+            for fk in info['foreign_keys']:
+                relationships.append(f"links to {fk['references_table']} via {fk['column']}")
+            description += "; ".join(relationships) + "\n"
+        
+        # Add common use cases
+        use_cases = self._get_use_cases(table_name)
+        if use_cases:
+            description += f"Common queries: {use_cases}"
+        
+        return description
+    
+    def _get_use_cases(self, table_name: str) -> str:
+        """Get common use cases for each table."""
+        use_cases = {
+            'products': 'product searches, catalog listings, price queries, inventory checks',
+            'customers': 'customer lookup, registration analysis, geographic distribution',
+            'orders': 'sales analysis, revenue tracking, order history, status monitoring',
+            'order_items': 'product sales performance, revenue by product, order composition',
+            'payments': 'payment processing, revenue reconciliation, payment method analysis',
+            'brands': 'brand performance, sales by brand, brand comparison',
+            'categories': 'category analysis, product organization, catalog structure'
+        }
+        
+        return use_cases.get(table_name, 'general data queries and analysis')
+    
+    def _load_table_names(self):
+        """Load table names from the collection."""
+        if not self.collection:
+            return
+        
+        try:
+            # Get all items from collection
+            results = self.collection.get()
+            self.table_names = [metadata['table_name'] for metadata in results['metadatas']]
+        except Exception as e:
+            print(f"⚠️ Could not load table names from Chroma: {e}")
+            self.table_names = []
+    
+    def get_relevant_schema(self, user_query: str, max_tables: int = 5) -> str:
+        """Get relevant schema using Chroma vector similarity search."""
+        if not self.collection:
+            print("⚠️ Chroma not initialized, falling back to full schema")
+            return get_structured_schema(self.db_path)
+        
+        try:
+            # Search for similar tables
+            results = self.collection.query(
+                query_texts=[user_query],
+                n_results=max_tables
+            )
+            
+            # Extract relevant table names
+            relevant_tables = []
+            if results['metadatas'] and len(results['metadatas']) > 0:
+                for metadata in results['metadatas'][0]:
+                    relevant_tables.append(metadata['table_name'])
+            
+            # Fallback if no relevant tables found
+            if not relevant_tables:
+                print("⚠️ No relevant tables found, using defaults")
+                relevant_tables = self._get_default_tables(user_query)[:max_tables]
+            
+            # Build schema for selected tables
+            return self._build_schema(relevant_tables)
+            
+        except Exception as e:
+            print(f"⚠️ Chroma search failed: {e}, falling back to full schema")
+            return get_structured_schema(self.db_path)
+    
+    def _get_default_tables(self, user_query: str) -> List[str]:
+        """Get default tables based on query patterns."""
+        query_lower = user_query.lower()
+        
+        if any(word in query_lower for word in ['revenue', 'sales', 'total', 'amount', 'brand']):
+            return ['orders', 'order_items', 'product_variants', 'products', 'brands']
+        elif any(word in query_lower for word in ['product', 'item', 'catalog']):
+            return ['products', 'product_variants', 'categories', 'brands']
+        elif any(word in query_lower for word in ['customer', 'user', 'buyer']):
+            return ['customers', 'orders', 'addresses']
+        else:
+            return ['products', 'customers', 'orders', 'order_items']
+    
+    def _build_schema(self, table_names: List[str]) -> str:
+        """Build schema string for specified tables."""
+        if not table_names:
+            return get_structured_schema(self.db_path)
+        
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        schema_lines = ["Available tables and columns:"]
+        
+        try:
+            for table_name in table_names:
+                cursor.execute(f"PRAGMA table_info({table_name});")
+                columns = cursor.fetchall()
+                if columns:
+                    col_names = [col[1] for col in columns]
+                    schema_lines.append(f"- {table_name}: {', '.join(col_names)}")
+        finally:
+            conn.close()
+        
+        return '\n'.join(schema_lines)
+    
+    def get_approach_info(self) -> Dict[str, Any]:
+        return {
+            "name": "Chroma Vector RAG",
+            "description": "Uses Chroma DB for persistent vector storage with semantic search",
+            "pros": ["Persistent storage", "Fast queries", "Scalable", "Easy management"],
+            "cons": ["Requires disk space", "Initial setup time", "Additional dependency"],
+            "best_for": "Production environments, persistent workflows, team collaboration"
+        }
+
+
 class RAGManager:
     """Manager for multiple RAG approaches."""
     
@@ -419,7 +706,8 @@ class RAGManager:
         self.approaches = {
             'no_rag': NoRAG(db_path),
             'keyword': KeywordRAG(db_path),
-            'faiss': FAISSVectorRAG(db_path)
+            'faiss': FAISSVectorRAG(db_path),
+            'chroma': ChromaVectorRAG(db_path)
         }
         self.performance_metrics = {}
     
