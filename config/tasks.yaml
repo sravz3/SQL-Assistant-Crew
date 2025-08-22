@@ -9,10 +9,13 @@ query_task:
     - order_items contains sales data and can link to product_variants via EITHER variant_id OR sku
     - product_variants links to products via product_id
     - products link to brands via brand_id
+    - inventory contains stock data and links to product_variants ONLY via variant_id (integer FK)
     - For sales/revenue queries: order_items → product_variants → products → brands
-    - BOTH approaches are valid: JOIN on variant_id OR JOIN on sku (order_items.sku = product_variants.sku)
+    - For inventory queries: inventory → product_variants → products → brands
+    - BOTH approaches are valid for sales: JOIN on variant_id OR JOIN on sku (order_items.sku = product_variants.sku)
     - order_items.sku matches product_variants.sku (both use VAR- prefix)
     - products.sku uses SKU- prefix (different from order_items)
+    - CRITICAL: inventory table has NO SKU field - only variant_id, warehouse_id, quantity
     IMPORTANT:
     - First, list which tables and columns from the schema you will use to answer the request.
     - Then, write the SQL query using the correct table relationships above.
@@ -30,10 +33,13 @@ review_task:
     - order_items contains sales data and can link to product_variants via EITHER variant_id OR sku
     - product_variants links to products via product_id
     - products link to brands via brand_id
+    - inventory contains stock data and links to product_variants ONLY via variant_id (integer FK)
     - For sales/revenue queries: order_items → product_variants → products → brands
-    - BOTH approaches are valid: JOIN on variant_id OR JOIN on sku (order_items.sku = product_variants.sku)
+    - For inventory queries: inventory → product_variants → products → brands
+    - BOTH approaches are valid for sales: JOIN on variant_id OR JOIN on sku (order_items.sku = product_variants.sku)
     - order_items.sku matches product_variants.sku (both use VAR- prefix)
     - products.sku uses SKU- prefix (different from order_items)
+    - CRITICAL: inventory table has NO SKU field - only variant_id, warehouse_id, quantity
     IMPORTANT:
     - First, only review the SQL query provided for correctness, performance, or readability
     - Check if the query uses correct table relationships (both variant_id and sku joins are valid for sales data)
