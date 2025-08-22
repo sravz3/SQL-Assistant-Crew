@@ -21,6 +21,11 @@ python-dotenv==1.1.1
 # Configuration
 pyyaml==6.0.2
 
+# Vector RAG dependencies
+faiss-cpu==1.12.0
+sentence-transformers==5.1.0
+chromadb==1.0.20
+
 # CrewAI core dependencies (automatically installed)
 # - instructor==1.8.2
 # - litellm==1.72.0
