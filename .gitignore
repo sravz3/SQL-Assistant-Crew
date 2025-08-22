@@ -110,6 +110,7 @@ poetry.lock
 # SQLite database
 *.sqlite
 *.sqlite3
+*.bin
 
 # dotenv environment variables
 .env 
